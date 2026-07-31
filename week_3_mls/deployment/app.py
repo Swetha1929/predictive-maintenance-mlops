@@ -1,36 +1,111 @@
+
 import os
 import streamlit as st
 import pandas as pd
 import joblib
 
-# Load the model committed by the pipeline (sits next to this file)
-model_path = os.path.join(os.path.dirname(__file__), "best_machine_failure_model_v1.joblib")
+# -----------------------------
+# Load trained model
+# -----------------------------
+model_path = os.path.join(
+    os.path.dirname(__file__),
+    "best_machine_failure_model_v1.joblib"
+)
+
 model = joblib.load(model_path)
 
-st.title("Machine Failure Prediction App")
-st.write("""
-This application predicts the likelihood of a machine failing based on its operational parameters.
-Enter the sensor and configuration data below to get a prediction.
-""")
+# -----------------------------
+# Streamlit page configuration
+# -----------------------------
+st.set_page_config(
+    page_title="Machine Failure Prediction",
+    page_icon="⚙️",
+    layout="centered"
+)
 
-Type         = st.selectbox("Machine Type", ["H", "L", "M"])
-air_temp     = st.number_input("Air Temperature (K)", 250.0, 400.0, 298.0, 0.1)
-process_temp = st.number_input("Process Temperature (K)", 250.0, 500.0, 324.0, 0.1)
-rot_speed    = st.number_input("Rotational Speed (RPM)", 0, 3000, 1400)
-torque       = st.number_input("Torque (Nm)", 0.0, 100.0, 40.0, 0.1)
-tool_wear    = st.number_input("Tool Wear (min)", 0, 300, 10)
+st.title("⚙️ Machine Failure Prediction")
+st.write(
+    """
+    Enter the machine operating parameters below to predict
+    whether the machine is likely to fail.
+    """
+)
 
-input_data = pd.DataFrame([{
-    "Air temperature": air_temp,
-    "Process temperature": process_temp,
-    "Rotational speed": rot_speed,
-    "Torque": torque,
-    "Tool wear": tool_wear,
-    "Type": Type,
-}])
+# -----------------------------
+# User Inputs
+# -----------------------------
+machine_type = st.selectbox(
+    "Machine Type",
+    ["H", "L", "M"]
+)
 
-if st.button("Predict Failure"):
-    prediction = model.predict(input_data)[0]
-    result = "Machine Failure" if prediction == 1 else "No Failure"
-    st.subheader("Prediction Result:")
-    st.success(f"The model predicts: **{result}**")
+air_temp = st.number_input(
+    "Air Temperature (K)",
+    min_value=250.0,
+    max_value=400.0,
+    value=298.0,
+    step=0.1
+)
+
+process_temp = st.number_input(
+    "Process Temperature (K)",
+    min_value=250.0,
+    max_value=500.0,
+    value=308.0,
+    step=0.1
+)
+
+rot_speed = st.number_input(
+    "Rotational Speed (rpm)",
+    min_value=0,
+    max_value=3000,
+    value=1500,
+    step=1
+)
+
+torque = st.number_input(
+    "Torque (Nm)",
+    min_value=0.0,
+    max_value=100.0,
+    value=40.0,
+    step=0.1
+)
+
+tool_wear = st.number_input(
+    "Tool Wear (min)",
+    min_value=0,
+    max_value=300,
+    value=10,
+    step=1
+)
+
+# -----------------------------
+# Prediction
+# -----------------------------
+if st.button("Predict Machine Failure"):
+
+    input_df = pd.DataFrame({
+        "Type": [machine_type],
+        "Air temperature [K]": [air_temp],
+        "Process temperature [K]": [process_temp],
+        "Rotational speed [rpm]": [rot_speed],
+        "Torque [Nm]": [torque],
+        "Tool wear [min]": [tool_wear]
+    })
+
+    prediction = model.predict(input_df)[0]
+
+    # Only calculate probability if the model supports it
+    probability = None
+    if hasattr(model, "predict_proba"):
+        probability = model.predict_proba(input_df)[0][1]
+
+    st.subheader("Prediction Result")
+
+    if prediction == 1:
+        st.error("⚠ Machine Failure Predicted")
+    else:
+        st.success("✅ No Machine Failure Predicted")
+
+    if probability is not None:
+        st.write(f"**Failure Probability:** {probability:.2%}")
