@@ -1,4 +1,3 @@
-
 import os
 import streamlit as st
 import pandas as pd
@@ -11,6 +10,11 @@ model_path = os.path.join(
     os.path.dirname(__file__),
     "best_machine_failure_model_v1.joblib"
 )
+
+if not os.path.exists(model_path):
+    raise FileNotFoundError(
+        f"Model file not found at: {model_path}"
+    )
 
 model = joblib.load(model_path)
 
@@ -84,18 +88,17 @@ tool_wear = st.number_input(
 # -----------------------------
 if st.button("Predict Machine Failure"):
 
-    input_df = pd.DataFrame({
-        "Type": [machine_type],
-        "Air temperature [K]": [air_temp],
-        "Process temperature [K]": [process_temp],
-        "Rotational speed [rpm]": [rot_speed],
-        "Torque [Nm]": [torque],
-        "Tool wear [min]": [tool_wear]
-    })
+    input_df = pd.DataFrame([{
+        "Type": machine_type,
+        "Air temperature [K]": air_temp,
+        "Process temperature [K]": process_temp,
+        "Rotational speed [rpm]": rot_speed,
+        "Torque [Nm]": torque,
+        "Tool wear [min]": tool_wear
+    }])
 
     prediction = model.predict(input_df)[0]
 
-    # Only calculate probability if the model supports it
     probability = None
     if hasattr(model, "predict_proba"):
         probability = model.predict_proba(input_df)[0][1]
