@@ -1,19 +1,33 @@
 from pathlib import Path
-import os
 import pandas as pd
-from github import Github, GithubException
 
-# paths
+# Paths
 BASE_DIR = Path(__file__).resolve().parent
-PROJECT_DIR = BASE_DIR.parent
-CSV_LOCAL = PROJECT_DIR / "data" / "machine-failure-prediction.csv"
+DATA_DIR = BASE_DIR.parent / "data"
+CSV_PATH = DATA_DIR / "machine-failure-prediction.csv"
 
-# read dataset
-df = pd.read_csv(CSV_LOCAL)
+# Safety check
+if not CSV_PATH.exists():
+    raise FileNotFoundError(f"Dataset not found at: {CSV_PATH}")
 
-# save/register file
-CSV_LOCAL.parent.mkdir(parents=True, exist_ok=True)
-df.to_csv(CSV_LOCAL, index=False)
+# Load dataset
+df = pd.read_csv(CSV_PATH)
 
-print("Dataset registered at:", CSV_LOCAL)
-print("Shape:", df.shape)
+# Basic validation / registration info
+print("Dataset loaded successfully.")
+print(f"Path: {CSV_PATH}")
+print(f"Shape: {df.shape}")
+print("\nColumns:")
+print(df.columns.tolist())
+
+print("\nFirst 5 rows:")
+print(df.head())
+
+print("\nMissing values per column:")
+print(df.isnull().sum())
+
+# Optional: save it back to ensure consistent formatting
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+df.to_csv(CSV_PATH, index=False)
+
+print(f"\nDataset registered and saved at: {CSV_PATH}")
