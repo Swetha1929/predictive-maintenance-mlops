@@ -5,4 +5,4 @@ xgboost==2.1.4
 joblib==1.5.1
 mlflow==3.0.1
 streamlit==1.43.2
-PyGithub==2.3.0
+PyGithub==2.5.0
