@@ -10,7 +10,6 @@ permissions:
   contents: write
 
 jobs:
-
   register-dataset:
     name: Register Dataset
     runs-on: ubuntu-latest
@@ -89,6 +88,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r week_3_mls/requirements.txt
 
+      - name: Start MLflow Tracking Server
+        run: |
+          nohup mlflow ui --host 0.0.0.0 --port 5000 &
+          sleep 5
+
       - name: Download Train/Test Splits
         uses: actions/download-artifact@v4
         with:
@@ -105,6 +109,4 @@ jobs:
           git add week_3_mls/deployment/best_machine_failure_model_v1.joblib
 
           git diff --cached --quiet || git commit -m "Add trained model [skip ci]"
-
-          git push
           git push
