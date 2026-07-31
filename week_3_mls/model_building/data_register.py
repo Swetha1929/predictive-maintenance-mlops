@@ -1,33 +1,27 @@
 from pathlib import Path
 import pandas as pd
 
-# Paths
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR.parent / "data"
-CSV_PATH = DATA_DIR / "machine-failure-prediction.csv"
+DATA_PATH = BASE_DIR.parent / "data" / "machine-failure-prediction.csv"
 
-# Safety check
-if not CSV_PATH.exists():
-    raise FileNotFoundError(f"Dataset not found at: {CSV_PATH}")
+if not DATA_PATH.exists():
+    raise FileNotFoundError(f"Dataset not found at: {DATA_PATH}")
 
-# Load dataset
-df = pd.read_csv(CSV_PATH)
+df = pd.read_csv(DATA_PATH)
+df.columns = df.columns.str.strip()
 
-# Basic validation / registration info
-print("Dataset loaded successfully.")
-print(f"Path: {CSV_PATH}")
-print(f"Shape: {df.shape}")
-print("\nColumns:")
-print(df.columns.tolist())
+expected_columns = [
+    "UDI", "Type", "Air temperature [K]", "Process temperature [K]",
+    "Rotational speed [rpm]", "Torque [Nm]", "Tool wear [min]", "Machine failure"
+]
+missing = [c for c in expected_columns if c not in df.columns]
+if missing:
+    raise ValueError(f"Dataset is missing expected columns: {missing}")
 
-print("\nFirst 5 rows:")
-print(df.head())
+print("Dataset registered successfully.")
+print(f"Rows: {df.shape[0]}, Columns: {df.shape[1]}")
+print("Columns:", list(df.columns))
+print("Failure distribution:")
+print(df["Machine failure"].value_counts())
 
-print("\nMissing values per column:")
-print(df.isnull().sum())
-
-# Optional: save it back to ensure consistent formatting
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-df.to_csv(CSV_PATH, index=False)
-
-print(f"\nDataset registered and saved at: {CSV_PATH}")
+df.to_csv(DATA_PATH, index=False)
